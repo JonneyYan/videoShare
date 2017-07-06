@@ -1,14 +1,18 @@
 package main
 
 type User struct {
-	id     string
+	openID string
 	token  string
-	avatar string
-	name   string
+	info   string
 }
 
 // Add 增加用户
-func (u *User) add() {
+func (u *User) getUserInfo() (User, error) {
+
+}
+
+// Add 增加用户
+func (u *User) add() error {
 
 }
 
@@ -17,12 +21,7 @@ func (u *User) freeze() {
 
 }
 
-// Login 冻结用户
-func (u *User) login() {
-
-}
-
-// Login 冻结用户
+// Login 登录
 func (u *User) login() {
 
 }

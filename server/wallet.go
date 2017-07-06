@@ -1,17 +1,15 @@
 package main
 
 type Wallet struct {
-	members int
-	count   float32
+	uid int
 }
 
-func NewWallet() {
+func (w *Wallet) GetMembers() int {
 
 }
-
-func (w *Wallet) GetMembers() {
+func (w *Wallet) GetCount() float32 {
 
 }
-func (w *Wallet) GetCount() {
+func (w *Wallet) GetExtract(uid string, number float32) {
 
 }

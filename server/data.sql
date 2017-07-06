@@ -6,9 +6,9 @@ CREATE TABLE `userinfo` (
 	PRIMARY KEY (`uid`)
 );
 
-CREATE TABLE `userdetail` (
-	`uid` INT(10) NOT NULL DEFAULT '0',
-	`intro` TEXT NULL,
-	`profile` TEXT NULL,
+CREATE TABLE `wallet` (
+	`uid` INT(10) NOT NULL,
+	`count` FLOAT NULL,
+	`freeze` FLOAT NULL,
 	PRIMARY KEY (`uid`)
 )
