@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -46,7 +47,9 @@ func handleIndexHTMLFile(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("openID")
 	if err != nil || cookie.Value == "" {
 		wx := NewWX(appID, appSecret)
-		url := wx.WebAuthRedirectURL("/", "snsapi_userinfo", "")
+
+		encodeurl := url.QueryEscape("http://shop.cocoabox.cn")
+		url := wx.WebAuthRedirectURL(encodeurl, "snsapi_userinfo", "")
 		http.Redirect(w, r, url, http.StatusFound)
 		return
 	}
