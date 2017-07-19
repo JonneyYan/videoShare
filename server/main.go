@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/JonneyYan/server/wxpay"
 )
 
 const (
@@ -14,6 +16,8 @@ const (
 	appkey    = "123123"
 	appSecret = "123123"
 )
+
+var wx Weixin
 
 func main() {
 	var (
@@ -26,19 +30,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// 前缀去除 ;列出dir
-	http.Handle("/static/",
-		http.StripPrefix("/client/dist/",
-			http.FileServer(http.Dir(wd)),
-		),
-	)
+
+	wx = NewWX(appID, appSecret)
 	http.HandleFunc("/", handleIndexHTMLFile)
+	http.HandleFunc("/pay", handlePay)
+	http.HandleFunc("/login", handleLogin)
+
+	http.HandleFunc("/payCallback", handleIndexHTMLFile)
 
 	http.HandleFunc("/statistics", handleIndexHTMLFile)
 	http.HandleFunc("/withdraw", handleIndexHTMLFile)
 
-	err2 := http.ListenAndServe(fmt.Sprintf(":%d", port), nil) //设置监听的端口
-	if err2 != nil {
+	err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil) //设置监听的端口
+	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
@@ -46,25 +50,22 @@ func handleIndexHTMLFile(w http.ResponseWriter, r *http.Request) {
 	// 获取cookie
 	cookie, err := r.Cookie("openID")
 	if err != nil || cookie.Value == "" {
-		wx := NewWX(appID, appSecret)
-
 		encodeurl := url.QueryEscape("http://shop.cocoabox.cn")
 		url := wx.WebAuthRedirectURL(encodeurl, "snsapi_userinfo", "")
 		http.Redirect(w, r, url, http.StatusFound)
 		return
 	}
 	openID := cookie.Value
-	user := User{openID: openID}
+	token, _ := r.Cookie("token")
+	user := User{openID: openID, token: token.Value}
 
-	userInfo, err := user.getUserInfo()
+	userInfo, err := user.GetUserInfo()
 	if err != nil {
 		cookie := http.Cookie{Name: "isMember", Value: "false", Path: "/"}
 		http.SetCookie(w, &cookie)
 	}
-	cookieOpenID := http.Cookie{Name: "openID", Value: userInfo.openID, Path: "/"}
-	cookieUserInfo := http.Cookie{Name: "userInfo", Value: userInfo.info, Path: "/"}
+	cookieUserInfo := http.Cookie{Name: "userInfo", Value: userInfo, Path: "/"}
 	http.SetCookie(w, &cookieUserInfo)
-	http.SetCookie(w, &cookieOpenID)
 
 	htmlFile := "../client/dist/index.html"
 	fl, err := os.Open(htmlFile)
@@ -81,4 +82,30 @@ func handleIndexHTMLFile(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprint(w, buf[:n])
 	}
+}
+
+func handleLogin(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	code := r.Form.Get("code")
+	userResp, err := wx.GetWebAccessToken(code)
+
+	if err != nil {
+		log.Printf("用户登录失败!:%s \n", err)
+	}
+
+	if userResp.Ok() {
+		cookieOpenID := http.Cookie{Name: "openID", Value: userResp.OpenID, Path: "/"}
+		cookieToken := http.Cookie{Name: "token", Value: userResp.AccessToken, Path: "/"}
+		http.SetCookie(w, &cookieOpenID)
+		http.SetCookie(w, &cookieToken)
+		http.Redirect(w, r, "/", http.StatusFound)
+	} else {
+		encodeurl := url.QueryEscape("http://shop.cocoabox.cn")
+		url := wx.WebAuthRedirectURL(encodeurl, "snsapi_userinfo", "")
+		http.Redirect(w, r, url, http.StatusFound)
+	}
+
+}
+func handlePay(w http.ResponseWriter, r *http.Request) {
+	wxpay := wxpay.NewAPI()
 }
