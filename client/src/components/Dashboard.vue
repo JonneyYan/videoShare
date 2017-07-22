@@ -77,7 +77,6 @@
   }
   .tag {
     display: inline-block;
-    margin-left: 10px;
     line-height: 20px;
     height: 22px;
     padding: 0 8px;
