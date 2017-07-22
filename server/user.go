@@ -1,29 +1,37 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"log"
+)
 
-// User 用户
 type User struct {
 	openID string
 	token  string
-	info   string
 }
 
-// Add 获取用户信息
-func (u *User) getUserInfo() (UserInfoResponse, error) {
-	userInfo, err := wx.GetUserInfo(u.token, u.openID)
-	if !userInfo.Ok() || err != nil {
-		return userInfo, fmt.Errorf("获取用户信息失败")
+// GetUserInfo 获取用户信息
+func (u *User) GetUserInfo() (string, error) {
+	userResp, err := wx.GetUserInfo(u.token, u.openID)
+
+	if userResp.Ok() {
+		b, err := json.Marshal(userResp)
+		if err != nil {
+			log.Println("userinfo json error")
+			return "", err
+		}
+		return string(b), nil
 	}
-	return userInfo, nil
+
+	return "", nil
 }
 
-// // Add 增加用户
-// func (u *User) add() error {
+// Add 增加用户
+func (u *User) Add() error {
 
 // }
 
-// // Login 登录
-// func (u *User) login() {
+// Freeze 冻结用户
+func (u *User) Freeze() {
 
-// }
+}
