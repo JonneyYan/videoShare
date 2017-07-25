@@ -212,15 +212,19 @@ func UnifiedOrder(pm *payMap) (map[string]string, error) {
 		panic("server return xml sign error")
 	}
 
-	if m["trade_type"] == TRADE_TYPE_APP {
-		rMap["appid"] = pm.info.AppID
-		rMap["partnerid"] = pm.info.MchID
-		rMap["prepayid"] = outXMLMap["prepay_id"]
-		rMap["package"] = "Sign=WXPay"
-		rMap["noncestr"] = getNonceStr()
-		rMap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
-		rMap["sign"] = Sign(rMap, pm.info.ApiKey)
-	}
+	rMap["return_code"] = outXMLMap["return_code"]
+	rMap["return_msg"] = outXMLMap["return_msg"]
+	rMap["result_code"] = outXMLMap["result_code"]
+	rMap["err_code"] = outXMLMap["err_code"]
+	rMap["err_code_des"] = outXMLMap["err_code_des"]
+
+	rMap["appid"] = pm.info.AppID
+	rMap["partnerid"] = pm.info.MchID
+	rMap["prepayid"] = outXMLMap["prepay_id"]
+	rMap["package"] = "Sign=WXPay"
+	rMap["noncestr"] = getNonceStr()
+	rMap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
+	rMap["sign"] = Sign(rMap, pm.info.ApiKey)
 	return rMap, nil
 }
 

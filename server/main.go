@@ -8,13 +8,14 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/JonneyYan/server/wxpay"
+	"github.com/JonneyYan/server/api"
 )
 
 const (
 	appID     = "123123"
 	appkey    = "123123"
 	appSecret = "123123"
+	mchID     = "123"
 )
 
 var wx Weixin
@@ -33,8 +34,8 @@ func main() {
 
 	wx = NewWX(appID, appSecret)
 	http.HandleFunc("/", handleIndexHTMLFile)
-	http.HandleFunc("/pay", handlePay)
-	http.HandleFunc("/login", handleLogin)
+	http.HandleFunc("/pay", api.HandlePay)
+	http.HandleFunc("/login", api.HandleLogin)
 
 	http.HandleFunc("/payCallback", handleIndexHTMLFile)
 
@@ -82,30 +83,4 @@ func handleIndexHTMLFile(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprint(w, buf[:n])
 	}
-}
-
-func handleLogin(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	code := r.Form.Get("code")
-	userResp, err := wx.GetWebAccessToken(code)
-
-	if err != nil {
-		log.Printf("用户登录失败!:%s \n", err)
-	}
-
-	if userResp.Ok() {
-		cookieOpenID := http.Cookie{Name: "openID", Value: userResp.OpenID, Path: "/"}
-		cookieToken := http.Cookie{Name: "token", Value: userResp.AccessToken, Path: "/"}
-		http.SetCookie(w, &cookieOpenID)
-		http.SetCookie(w, &cookieToken)
-		http.Redirect(w, r, "/", http.StatusFound)
-	} else {
-		encodeurl := url.QueryEscape("http://shop.cocoabox.cn")
-		url := wx.WebAuthRedirectURL(encodeurl, "snsapi_userinfo", "")
-		http.Redirect(w, r, url, http.StatusFound)
-	}
-
-}
-func handlePay(w http.ResponseWriter, r *http.Request) {
-	wxpay := wxpay.NewAPI()
 }
