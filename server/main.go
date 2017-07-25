@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	appID     = "123123"
+	appID     = "wx2f3392237a4fdf1d"
 	appkey    = "123123"
 	appSecret = "123123"
 	mchID     = "123"
@@ -22,9 +22,10 @@ var wx Weixin
 
 func main() {
 	var (
-		port = flag.Int("port", 80, "请输入服务器端口")
+		port = 8088
 	)
-
+	fmt.Println("port:", port)
+	wx = NewWX(appID, appSecret)
 	flag.Parse()
 	// 静态文件 os 绝对路径
 	wd, err := os.Getwd() // 当前路径
@@ -39,8 +40,10 @@ func main() {
 
 	http.HandleFunc("/payCallback", handleIndexHTMLFile)
 
-	http.HandleFunc("/statistics", handleIndexHTMLFile)
-	http.HandleFunc("/withdraw", handleIndexHTMLFile)
+	http.HandleFunc("/api/statistics", handleIndexHTMLFile)
+	http.HandleFunc("/api/withdraw", handleIndexHTMLFile)
+
+	http.HandleFunc("/*", handleIndexHTMLFile)
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil) //设置监听的端口
 	if err != nil {
@@ -49,7 +52,8 @@ func main() {
 }
 func handleIndexHTMLFile(w http.ResponseWriter, r *http.Request) {
 	// 获取cookie
-	cookie, err := r.Cookie("openID")
+	cookie, err := r.Cookie("userInfo")
+	// 如果用户未登录跳转到登录页面
 	if err != nil || cookie.Value == "" {
 		encodeurl := url.QueryEscape("http://shop.cocoabox.cn")
 		url := wx.WebAuthRedirectURL(encodeurl, "snsapi_userinfo", "")
@@ -60,12 +64,13 @@ func handleIndexHTMLFile(w http.ResponseWriter, r *http.Request) {
 	token, _ := r.Cookie("token")
 	user := User{openID: openID, token: token.Value}
 
-	userInfo, err := user.GetUserInfo()
+	userInfo, err := user.getUserInfo()
+	// 如果用户不是会员，在cookie中注入isMember
 	if err != nil {
 		cookie := http.Cookie{Name: "isMember", Value: "false", Path: "/"}
 		http.SetCookie(w, &cookie)
 	}
-	cookieUserInfo := http.Cookie{Name: "userInfo", Value: userInfo, Path: "/"}
+	cookieUserInfo := http.Cookie{Name: "userInfo", Value: userInfo.toJSON(), Path: "/"}
 	http.SetCookie(w, &cookieUserInfo)
 
 	htmlFile := "../client/dist/index.html"

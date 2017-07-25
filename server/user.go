@@ -29,7 +29,7 @@ func (u *User) GetUserInfo() (string, error) {
 // Add 增加用户
 func (u *User) Add() error {
 
-}
+// }
 
 // Freeze 冻结用户
 func (u *User) Freeze() {

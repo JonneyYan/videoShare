@@ -55,6 +55,14 @@ type UserInfoResponse struct {
 	UnionID    string   `json:"unionid"`
 }
 
+func (u *UserInfoResponse) toJSON() string {
+	b, err := json.Marshal(u)
+	if err != nil {
+		return fmt.Sprintf("json err:%v", err)
+	}
+	return fmt.Sprintf(string(b))
+}
+
 type JSSDKTicketResponse struct {
 	WeiXinResponse
 	Ticket    string `json:"ticket"`
